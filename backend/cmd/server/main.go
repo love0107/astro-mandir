@@ -9,23 +9,22 @@ import (
 )
 
 func main() {
-	// Init DB
 	db.InitDB()
 
 	// Init handlers
 	panchaangHandler := handlers.NewPanchaangHandler()
+	bhajanHandler := handlers.NewBhajanHandler()
 
-	// Router
 	r := gin.Default()
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "AstroMandir chal raha hai! 🙏"})
 	})
 
-	// API routes
 	api := r.Group("/api")
 	{
 		api.GET("/today", panchaangHandler.GetToday)
+		api.GET("/bhajan", bhajanHandler.GetTodayBhajan)
 	}
 
 	log.Println("Server starting on :8080")
