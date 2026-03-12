@@ -17,7 +17,7 @@ func NewPanchaangService() *PanchaangService {
 func (s *PanchaangService) GetToday(ctx context.Context) (*prokerala.PanchaangData, error) {
 	today := time.Now().Format("2006-01-02")
 
-	// Step 1 — check database first
+	// Step 1 — check DB first
 	row, err := db.Queries.GetPanchang(ctx, today)
 	if err == nil {
 		return &prokerala.PanchaangData{
@@ -31,7 +31,12 @@ func (s *PanchaangService) GetToday(ctx context.Context) (*prokerala.PanchaangDa
 		}, nil
 	}
 
-	// Step 2 — return hardcoded for now
-	// TODO: replace with real Prokerala API once key is ready
-	return prokerala.HardcodedPanchang(), nil
+	// Step 2 — call real Prokerala API
+	data, err := prokerala.FetchPanchang(today)
+	if err != nil {
+		// Step 3 — fallback
+		return prokerala.HardcodedPanchang(), nil
+	}
+
+	return data, nil
 }
