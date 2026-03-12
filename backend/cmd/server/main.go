@@ -11,9 +11,10 @@ import (
 func main() {
 	db.InitDB()
 
-	// Init handlers
 	panchaangHandler := handlers.NewPanchaangHandler()
 	bhajanHandler := handlers.NewBhajanHandler()
+	rashifalHandler := handlers.NewRashifalHandler()
+	kundaliHandler := handlers.NewKundaliHandler()
 
 	r := gin.Default()
 
@@ -25,8 +26,10 @@ func main() {
 	{
 		api.GET("/today", panchaangHandler.GetToday)
 		api.GET("/bhajan", bhajanHandler.GetTodayBhajan)
+		api.GET("/rashifal/:rashi", rashifalHandler.GetRashifal)
+		api.POST("/kundali", kundaliHandler.GenerateKundali)
 	}
 
-	log.Println("Server starting on :8080")
+	log.Println(" Server starting on :8080")
 	r.Run(":8080")
 }
