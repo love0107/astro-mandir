@@ -5,14 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 )
-
-// Get your free key from:
-// console.cloud.google.com
-// → Create Project
-// → Enable YouTube Data API v3
-// → Create Credentials → API Key
-const API_KEY = "YOUR_YOUTUBE_API_KEY"
 
 type BhajanData struct {
 	Title     string `json:"title"`
@@ -20,11 +14,19 @@ type BhajanData struct {
 	EmbedURL  string `json:"embed_url"`
 }
 
-// SearchBhajan — searches YouTube for bhajan
 func SearchBhajan(query string) (*BhajanData, error) {
+	// Read from .env — not hardcoded!
+	apiKey := os.Getenv("YOUTUBE_API_KEY")
+
+	fmt.Println("YouTube API Key:", apiKey) // temporary debug
+
+	if apiKey == "" {
+		return HardcodedBhajan(), nil
+	}
+
 	url := fmt.Sprintf(
 		"https://www.googleapis.com/youtube/v3/search?part=snippet&q=%s&type=video&videoEmbeddable=true&key=%s&maxResults=1",
-		query, API_KEY,
+		query, apiKey,
 	)
 
 	resp, err := http.Get(url)
@@ -68,7 +70,6 @@ func SearchBhajan(query string) (*BhajanData, error) {
 	}, nil
 }
 
-// HardcodedBhajan — fallback if API key not set
 func HardcodedBhajan() *BhajanData {
 	return &BhajanData{
 		Title:     "Jai Ganesh Jai Ganesh Deva",
