@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine
+FROM golang:1.25-alpine
 
 # Install gcc for SQLite
 RUN apk add --no-cache gcc musl-dev
