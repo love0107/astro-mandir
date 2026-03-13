@@ -1,0 +1,12 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #FFF8F0;
+  font-family: Arial, sans-serif;
+  max-width: 480px;
+  margin: 0 auto;
+}

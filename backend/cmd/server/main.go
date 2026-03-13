@@ -11,15 +11,7 @@ import (
 )
 
 func main() {
-	// Load .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Println(".env file nahi mila — environment variables use karega")
-	}
-
-	// Now you can access anywhere in code like this
-	// os.Getenv("PROKERALA_CLIENT_ID")
-
+	godotenv.Load()
 	db.InitDB()
 
 	panchaangHandler := handlers.NewPanchaangHandler()
@@ -29,10 +21,22 @@ func main() {
 
 	r := gin.Default()
 
+	// ADD THIS — CORS middleware
+	r.Use(func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Handle preflight request
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+		c.Next()
+	})
+
 	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "AstroMandir chal raha hai! 🙏",
-		})
+		c.JSON(200, gin.H{"message": "AstroMandir chal raha hai! 🙏"})
 	})
 
 	api := r.Group("/api")
