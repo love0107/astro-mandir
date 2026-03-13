@@ -39,7 +39,7 @@ export default function App() {
   )
 
   return (
-      <div style={{ padding: "16px" }}>
+      <div style={{ padding:"16px" }}>
 
         {/* Header */}
         <div style={{ textAlign: "center", padding: "16px 0" }}>
