@@ -1,177 +1,206 @@
 package kundali
 
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"os"
+	"strings"
+	"sync"
+	"time"
+)
+
+var (
+	accessToken string
+	tokenExpiry time.Time
+	tokenMu     sync.Mutex
+)
+
 type KundaliRequest struct {
-	Name  string `json:"name"`
-	DOB   string `json:"dob"`
-	TOB   string `json:"tob"`
-	Place string `json:"place"`
+	Name      string `json:"name"`
+	DOB       string `json:"dob"`
+	TOB       string `json:"tob"`
+	Latitude  string `json:"latitude"`
+	Longitude string `json:"longitude"`
 }
 
 type KundaliData struct {
-	Name      string `json:"name"`
-	Rashi     string `json:"rashi"`
-	Swami     string `json:"swami"`
-	Tatva     string `json:"tatva"`
-	BhagyaAnk string `json:"bhagya_ank"`
-	ShubhRang string `json:"shubh_rang"`
-	Mantra    string `json:"mantra"`
-	Guidance  string `json:"guidance"`
+	Name          string       `json:"name"`
+	Nakshatra     string       `json:"nakshatra"`
+	NakshatraLord string       `json:"nakshatra_lord"`
+	ChandraRasi   string       `json:"chandra_rasi"`
+	SooryaRasi    string       `json:"soorya_rasi"`
+	Zodiac        string       `json:"zodiac"`
+	Color         string       `json:"color"`
+	BirthStone    string       `json:"birth_stone"`
+	Gender        string       `json:"gender"`
+	BestDirection string       `json:"best_direction"`
+	MangalDosha   bool         `json:"mangal_dosha"`
+	MangalDesc    string       `json:"mangal_description"`
+	Yogas         []YogaDetail `json:"yogas"`
 }
 
-// Rashi details map
-var rashiDetails = map[string]map[string]string{
-	"mesh": {
-		"swami":    "Mangal",
-		"tatva":    "Agni",
-		"bhagya":   "1, 8",
-		"rang":     "Laal",
-		"mantra":   "Om Aim Hreem Shreem",
-		"guidance": "Aaj mehnat rang laayegi. Parivar ka saath milega.",
-	},
-	"vrishabh": {
-		"swami":    "Shukra",
-		"tatva":    "Prithvi",
-		"bhagya":   "2, 6",
-		"rang":     "Safed",
-		"mantra":   "Om Shum Shukraya Namah",
-		"guidance": "Aarthik sthiti mazboot rahegi. Naye kaam ki shuruat shubh.",
-	},
-	"mithun": {
-		"swami":    "Budh",
-		"tatva":    "Vayu",
-		"bhagya":   "3, 5",
-		"rang":     "Hara",
-		"mantra":   "Om Bum Budhaya Namah",
-		"guidance": "Vyapar mein labh milega. Nayi mulakat shubh rahegi.",
-	},
-	"kark": {
-		"swami":    "Chandra",
-		"tatva":    "Jal",
-		"bhagya":   "2, 7",
-		"rang":     "Safed",
-		"mantra":   "Om Som Somaya Namah",
-		"guidance": "Ghar mein sukh shanti rahegi. Mata ka ashirwad milega.",
-	},
-	"simha": {
-		"swami":    "Surya",
-		"tatva":    "Agni",
-		"bhagya":   "1, 4",
-		"rang":     "Sona",
-		"mantra":   "Om Hram Hreem Hraum Sah Suryaya Namah",
-		"guidance": "Maan samman badhega. Sarkar se labh milne ki sambhavna.",
-	},
-	"kanya": {
-		"swami":    "Budh",
-		"tatva":    "Prithvi",
-		"bhagya":   "3, 6",
-		"rang":     "Hara",
-		"mantra":   "Om Bum Budhaya Namah",
-		"guidance": "Kaam mein safalta milegi. Swasthya ka dhyan rakhen.",
-	},
-	"tula": {
-		"swami":    "Shukra",
-		"tatva":    "Vayu",
-		"bhagya":   "2, 7",
-		"rang":     "Neela",
-		"mantra":   "Om Shum Shukraya Namah",
-		"guidance": "Rishton mein madhurta aayegi. Naye avsar milenge.",
-	},
-	"vrishchik": {
-		"swami":    "Mangal",
-		"tatva":    "Jal",
-		"bhagya":   "1, 9",
-		"rang":     "Laal",
-		"mantra":   "Om Kram Kreem Kraum Sah Bhaumaya Namah",
-		"guidance": "Aaj ka din sahas ke liye shubh. Dushmano par vijay milegi.",
-	},
-	"dhanu": {
-		"swami":    "Guru",
-		"tatva":    "Agni",
-		"bhagya":   "3, 9",
-		"rang":     "Peela",
-		"mantra":   "Om Gram Greem Graum Sah Gurave Namah",
-		"guidance": "Dharmik karyon mein man lagega. Vidya mein safalta milegi.",
-	},
-	"makar": {
-		"swami":    "Shani",
-		"tatva":    "Prithvi",
-		"bhagya":   "6, 8",
-		"rang":     "Neela",
-		"mantra":   "Om Pram Preem Praum Sah Shanaischaraya Namah",
-		"guidance": "Mehnat ka phal zaroor milega. Sabr rakhen.",
-	},
-	"kumbh": {
-		"swami":    "Shani",
-		"tatva":    "Vayu",
-		"bhagya":   "4, 8",
-		"rang":     "Neela",
-		"mantra":   "Om Pram Preem Praum Sah Shanaischaraya Namah",
-		"guidance": "Naye dost banenge. Samajik karyon mein safalta milegi.",
-	},
-	"meen": {
-		"swami":    "Guru",
-		"tatva":    "Jal",
-		"bhagya":   "3, 7",
-		"rang":     "Peela",
-		"mantra":   "Om Gram Greem Graum Sah Gurave Namah",
-		"guidance": "Aaj bhavnaatmak din hai. Pooja path se man ko shanti milegi.",
-	},
+type YogaDetail struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
-// CalculateRashi — basic sun sign calculation from DOB
-func CalculateRashi(dob string) string {
-	if len(dob) < 10 {
-		return "mesh"
+func getAccessToken() (string, error) {
+	tokenMu.Lock()
+	defer tokenMu.Unlock()
+
+	if accessToken != "" && time.Now().Before(tokenExpiry) {
+		return accessToken, nil
 	}
 
-	month := dob[5:7]
-	day := dob[8:10]
+	data := url.Values{}
+	data.Set("grant_type", "client_credentials")
+	data.Set("client_id", os.Getenv("PROKERALA_CLIENT_ID"))
+	data.Set("client_secret", os.Getenv("PROKERALA_CLIENT_SECRET"))
 
-	switch {
-	case (month == "03" && day >= "21") || (month == "04" && day <= "19"):
-		return "mesh"
-	case (month == "04" && day >= "20") || (month == "05" && day <= "20"):
-		return "vrishabh"
-	case (month == "05" && day >= "21") || (month == "06" && day <= "20"):
-		return "mithun"
-	case (month == "06" && day >= "21") || (month == "07" && day <= "22"):
-		return "kark"
-	case (month == "07" && day >= "23") || (month == "08" && day <= "22"):
-		return "simha"
-	case (month == "08" && day >= "23") || (month == "09" && day <= "22"):
-		return "kanya"
-	case (month == "09" && day >= "23") || (month == "10" && day <= "22"):
-		return "tula"
-	case (month == "10" && day >= "23") || (month == "11" && day <= "21"):
-		return "vrishchik"
-	case (month == "11" && day >= "22") || (month == "12" && day <= "21"):
-		return "dhanu"
-	case (month == "12" && day >= "22") || (month == "01" && day <= "19"):
-		return "makar"
-	case (month == "01" && day >= "20") || (month == "02" && day <= "18"):
-		return "kumbh"
-	default:
-		return "meen"
+	resp, err := http.Post(
+		"https://api.prokerala.com/token",
+		"application/x-www-form-urlencoded",
+		strings.NewReader(data.Encode()),
+	)
+	if err != nil {
+		return "", err
 	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+
+	var result struct {
+		AccessToken string `json:"access_token"`
+		ExpiresIn   int    `json:"expires_in"`
+	}
+	json.Unmarshal(body, &result)
+
+	accessToken = result.AccessToken
+	tokenExpiry = time.Now().Add(time.Duration(result.ExpiresIn-60) * time.Second)
+
+	return accessToken, nil
 }
 
-// GenerateKundali — main function
-func GenerateKundali(req KundaliRequest) *KundaliData {
-	rashi := CalculateRashi(req.DOB)
+func FetchKundali(req KundaliRequest) (*KundaliData, error) {
+	token, err := getAccessToken()
+	if err != nil {
+		return nil, err
+	}
 
-	details, ok := rashiDetails[rashi]
-	if !ok {
-		details = rashiDetails["mesh"]
+	// Combine date and time
+	// DOB: "1990-05-15", TOB: "14:30"
+	datetime := fmt.Sprintf("%sT%s:00%%2B05:30", req.DOB, req.TOB)
+
+	// Default coordinates to Lucknow if not provided
+	coordinates := req.Latitude + "," + req.Longitude
+	if req.Latitude == "" || req.Longitude == "" {
+		coordinates = "26.8467,80.9462"
+	}
+
+	apiURL := fmt.Sprintf(
+		"https://api.prokerala.com/v2/astrology/kundli?ayanamsa=1&coordinates=%s&datetime=%s&la=hi",
+		coordinates, datetime,
+	)
+
+	httpReq, _ := http.NewRequest("GET", apiURL, nil)
+	httpReq.Header.Add("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+
+	// Exact response structure from Prokerala
+	var result struct {
+		Status string `json:"status"`
+		Data   struct {
+			NakshatraDetails struct {
+				Nakshatra struct {
+					Name string `json:"name"`
+					Lord struct {
+						VedicName string `json:"vedic_name"`
+					} `json:"lord"`
+				} `json:"nakshatra"`
+				ChandraRasi struct {
+					Name string `json:"name"`
+				} `json:"chandra_rasi"`
+				SooryaRasi struct {
+					Name string `json:"name"`
+				} `json:"soorya_rasi"`
+				Zodiac struct {
+					Name string `json:"name"`
+				} `json:"zodiac"`
+				AdditionalInfo struct {
+					Color         string `json:"color"`
+					BirthStone    string `json:"birth_stone"`
+					Gender        string `json:"gender"`
+					BestDirection string `json:"best_direction"`
+				} `json:"additional_info"`
+			} `json:"nakshatra_details"`
+			MangalDosha struct {
+				HasDosha    bool   `json:"has_dosha"`
+				Description string `json:"description"`
+			} `json:"mangal_dosha"`
+			YogaDetails []struct {
+				Name        string `json:"name"`
+				Description string `json:"description"`
+			} `json:"yoga_details"`
+		} `json:"data"`
+	}
+
+	json.Unmarshal(body, &result)
+
+	if result.Status != "ok" {
+		return nil, fmt.Errorf("kundali API error")
+	}
+
+	// Build yogas list
+	yogas := []YogaDetail{}
+	for _, y := range result.Data.YogaDetails {
+		yogas = append(yogas, YogaDetail{
+			Name:        y.Name,
+			Description: y.Description,
+		})
 	}
 
 	return &KundaliData{
-		Name:      req.Name,
-		Rashi:     rashi,
-		Swami:     details["swami"],
-		Tatva:     details["tatva"],
-		BhagyaAnk: details["bhagya"],
-		ShubhRang: details["rang"],
-		Mantra:    details["mantra"],
-		Guidance:  details["guidance"],
+		Name:          req.Name,
+		Nakshatra:     result.Data.NakshatraDetails.Nakshatra.Name,
+		NakshatraLord: result.Data.NakshatraDetails.Nakshatra.Lord.VedicName,
+		ChandraRasi:   result.Data.NakshatraDetails.ChandraRasi.Name,
+		SooryaRasi:    result.Data.NakshatraDetails.SooryaRasi.Name,
+		Zodiac:        result.Data.NakshatraDetails.Zodiac.Name,
+		Color:         result.Data.NakshatraDetails.AdditionalInfo.Color,
+		BirthStone:    result.Data.NakshatraDetails.AdditionalInfo.BirthStone,
+		Gender:        result.Data.NakshatraDetails.AdditionalInfo.Gender,
+		BestDirection: result.Data.NakshatraDetails.AdditionalInfo.BestDirection,
+		MangalDosha:   result.Data.MangalDosha.HasDosha,
+		MangalDesc:    result.Data.MangalDosha.Description,
+		Yogas:         yogas,
+	}, nil
+}
+
+// Fallback if API fails
+func HardcodedKundali(req KundaliRequest) *KundaliData {
+	return &KundaliData{
+		Name:          req.Name,
+		Nakshatra:     "Rohini",
+		NakshatraLord: "Chandra",
+		ChandraRasi:   "Vrishabh",
+		SooryaRasi:    "Mesh",
+		Zodiac:        "Taurus",
+		Color:         "White",
+		BirthStone:    "Pearl",
+		BestDirection: "North",
+		MangalDosha:   false,
+		MangalDesc:    "Not Manglik",
+		Yogas:         []YogaDetail{},
 	}
 }

@@ -24,8 +24,8 @@ func (h *KundaliHandler) GenerateKundali(c *gin.Context) {
 		return
 	}
 
-	if req.Name == "" || req.DOB == "" {
-		c.JSON(400, gin.H{"error": "Naam aur janm tithi zaroori hai"})
+	if req.Name == "" || req.DOB == "" || req.TOB == "" {
+		c.JSON(400, gin.H{"error": "Naam, janm tithi aur samay zaroori hai"})
 		return
 	}
 
