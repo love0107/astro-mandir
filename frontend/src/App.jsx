@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 
-const API = "http://localhost:8080/api"
+const API = import.meta.env.VITE_API_URL || "http://localhost:8080/api"
 
 export default function App() {
   const [today, setToday] = useState(null)
