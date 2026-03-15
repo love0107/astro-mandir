@@ -5,12 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2575551a-d41b-4239-891a-2c71d47e7085" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/backend/db/generated/models.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/db/generated/models.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/db/generated/queries.sql.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/db/generated/queries.sql.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/db/queries/queries.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/db/queries/queries.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/db/schema/schema.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/db/schema/schema.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/service/panchang.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/service/panchang.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/astroMandir.db" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

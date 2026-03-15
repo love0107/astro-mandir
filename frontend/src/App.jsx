@@ -95,31 +95,31 @@ export default function App() {
 
 // ─── Today Card ───────────────────────────────────
 function TodayCard({ data }) {
-  return (
-      <div style={cardStyle}>
-        <h3 style={headingStyle}>📅 Aaj Ka Din</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "10px" }}>
-          <InfoRow icon="🌅" label="Sunrise" value={data.sunrise} />
-          <InfoRow icon="🌙" label="Sunset" value={data.sunset} />
-          <InfoRow icon="📅" label="Tithi" value={data.tithi} />
-          <InfoRow icon="⭐" label="Nakshatra" value={data.nakshatra} />
-          <InfoRow icon="🧘" label="Yoga" value={data.yoga} />
-          <InfoRow icon="🌕" label="Moonrise" value={data.moonrise} />
-        </div>
-        {data.vrat && (
-            <div style={{
-              backgroundColor: "#FFF8E1",
-              borderRadius: "8px",
-              padding: "10px",
-              textAlign: "center"
-            }}>
+    return (
+        <div style={cardStyle}>
+            <h3 style={headingStyle}>🌄 Aaj Ka Din</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "10px" }}>
+                <InfoRow icon="🌅" label="Sunrise" value={data.sunrise} />
+                <InfoRow icon="🌇" label="Sunset" value={data.sunset} />
+                <InfoRow icon="🔱" label="Tithi" value={data.tithi} />
+                <InfoRow icon="💫" label="Nakshatra" value={data.nakshatra} />
+                <InfoRow icon="🧘" label="Yoga" value={data.yoga} />
+                <InfoRow icon="🌕" label="Moonrise" value={data.moonrise} />
+            </div>
+            {data.vrat && (
+                <div style={{
+                    backgroundColor: "#FFF8E1",
+                    borderRadius: "8px",
+                    padding: "10px",
+                    textAlign: "center"
+                }}>
           <span style={{ color: "#F57F17", fontWeight: "bold" }}>
             🙏 Aaj Ka Vrat: {data.vrat}
           </span>
-            </div>
-        )}
-      </div>
-  )
+                </div>
+            )}
+        </div>
+    )
 }
 
 // ─── Bhajan Player ────────────────────────────────
