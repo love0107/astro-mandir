@@ -14,22 +14,39 @@ export default function App() {
     fetchData()
   }, [])
 
-  const fetchData = async () => {
-    try {
-      const [todayRes, bhajanRes] = await Promise.all([
-        fetch(`${API}/today`),
-        fetch(`${API}/bhajan${userRashi ? `?rashi=${userRashi}` : ""}`)
-      ])
-      const todayData = await todayRes.json()
-      const bhajanData = await bhajanRes.json()
-      setToday(todayData)
-      setBhajan(bhajanData)
-    } catch (err) {
-      console.error("Error:", err)
-    } finally {
-      setLoading(false)
+    const fetchData = async () => {
+        try {
+            // Get user location from browser
+            let coords = { lat: 26.8467, lng: 80.9462 } // default Lucknow
+
+            // Ask browser for location
+            if (navigator.geolocation) {
+                coords = await new Promise((resolve) => {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => resolve({
+                            lat: pos.coords.latitude,
+                            lng: pos.coords.longitude
+                        }),
+                        () => resolve(coords) // if user denies → use default
+                    )
+                })
+            }
+
+            const [todayRes, bhajanRes] = await Promise.all([
+                fetch(`${API}/today?lat=${coords.lat}&lng=${coords.lng}`),
+                fetch(`${API}/bhajan${userRashi ? `?rashi=${userRashi}` : ""}`)
+            ])
+
+            const todayData = await todayRes.json()
+            const bhajanData = await bhajanRes.json()
+            setToday(todayData)
+            setBhajan(bhajanData)
+        } catch (err) {
+            console.error("Error:", err)
+        } finally {
+            setLoading(false)
+        }
     }
-  }
 
   if (loading) return (
       <div style={{ textAlign: "center", padding: "40px", color: "#B8541B" }}>
@@ -356,6 +373,7 @@ function ResultRow({ label, value }) {
       </div>
   )
 }
+
 
 // ─── Shared Styles ────────────────────────────────
 const cardStyle = {

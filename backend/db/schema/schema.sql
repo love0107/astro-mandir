@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS panchang (
     nakshatra TEXT,
     sunrise TEXT,
     sunset TEXT,
+    moonrise TEXT,
+    yoga TEXT,
     muhurat TEXT,
     festival TEXT
 );

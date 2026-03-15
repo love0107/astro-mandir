@@ -34,6 +34,8 @@ type Panchang struct {
 	Nakshatra sql.NullString
 	Sunrise   sql.NullString
 	Sunset    sql.NullString
+	Moonrise  sql.NullString
+	Yoga      sql.NullString
 	Muhurat   sql.NullString
 	Festival  sql.NullString
 }

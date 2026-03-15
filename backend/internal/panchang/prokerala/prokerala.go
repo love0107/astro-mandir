@@ -96,15 +96,18 @@ func getAccessToken() (string, error) {
 	return accessToken, nil
 }
 
-func FetchPanchang(date string) (*PanchaangData, error) {
+func FetchPanchang(date string, lat string, lng string) (*PanchaangData, error) {
 	token, err := getAccessToken()
 	if err != nil {
 		return nil, fmt.Errorf("token error: %v", err)
 	}
 
+	// Use dynamic coordinates
+	coordinates := lat + "," + lng
+
 	apiURL := fmt.Sprintf(
-		"https://api.prokerala.com/v2/astrology/panchang?datetime=%sT06:00:00%%2B05:30&coordinates=26.8467,80.9462&ayanamsa=1",
-		date,
+		"https://api.prokerala.com/v2/astrology/panchang?datetime=%sT06:00:00%%2B05:30&coordinates=%s&ayanamsa=1",
+		date, coordinates,
 	)
 
 	req, err := http.NewRequest("GET", apiURL, nil)

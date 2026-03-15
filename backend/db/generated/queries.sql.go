@@ -92,7 +92,7 @@ func (q *Queries) GetBhajanByRashi(ctx context.Context, rashi sql.NullString) (B
 }
 
 const getPanchang = `-- name: GetPanchang :one
-SELECT date, vrat, tithi, nakshatra, sunrise, sunset, muhurat, festival FROM panchang WHERE date = ?
+SELECT date, vrat, tithi, nakshatra, sunrise, sunset, moonrise, yoga, muhurat, festival FROM panchang WHERE date = ?
 `
 
 func (q *Queries) GetPanchang(ctx context.Context, date string) (Panchang, error) {
@@ -105,8 +105,41 @@ func (q *Queries) GetPanchang(ctx context.Context, date string) (Panchang, error
 		&i.Nakshatra,
 		&i.Sunrise,
 		&i.Sunset,
+		&i.Moonrise,
+		&i.Yoga,
 		&i.Muhurat,
 		&i.Festival,
 	)
 	return i, err
+}
+
+const insertPanchang = `-- name: InsertPanchang :exec
+INSERT OR REPLACE INTO panchang
+(date, vrat, tithi, nakshatra, sunrise, sunset, muhurat, festival)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+`
+
+type InsertPanchangParams struct {
+	Date      string
+	Vrat      sql.NullString
+	Tithi     sql.NullString
+	Nakshatra sql.NullString
+	Sunrise   sql.NullString
+	Sunset    sql.NullString
+	Muhurat   sql.NullString
+	Festival  sql.NullString
+}
+
+func (q *Queries) InsertPanchang(ctx context.Context, arg InsertPanchangParams) error {
+	_, err := q.db.ExecContext(ctx, insertPanchang,
+		arg.Date,
+		arg.Vrat,
+		arg.Tithi,
+		arg.Nakshatra,
+		arg.Sunrise,
+		arg.Sunset,
+		arg.Muhurat,
+		arg.Festival,
+	)
+	return err
 }

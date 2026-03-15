@@ -16,3 +16,8 @@ RETURNING *;
 INSERT INTO users (phone, rashi, name)
 VALUES (?, ?, ?)
 RETURNING *;
+
+-- name: InsertPanchang :exec
+INSERT OR REPLACE INTO panchang
+(date, vrat, tithi, nakshatra, sunrise, sunset, muhurat, festival)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
